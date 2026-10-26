@@ -1,6 +1,8 @@
+from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class ProductCreate(BaseModel):
@@ -77,3 +79,56 @@ class UserPublic(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class OrderStatus(StrEnum):
+    """The only values a status may have. Anything else is a 422 error."""
+
+    PENDING = "pending"
+    PAID = "paid"
+    SHIPPED = "shipped"
+    DELIVERED = "delivered"
+    CANCELLED = "cancelled"
+
+
+class OrderItemCreate(BaseModel):
+    """One line the customer wants. Note: there is no price field.
+
+    The client says WHAT and HOW MANY. The server decides the price. If the
+    client could send a price, anyone could buy everything for 1 cent.
+    """
+
+    product_id: int = Field(gt=0)
+    quantity: int = Field(ge=1, le=100)
+
+
+class OrderCreate(BaseModel):
+    items: list[OrderItemCreate] = Field(min_length=1, max_length=50)
+
+    @model_validator(mode="after")
+    def products_must_be_unique(self) -> "OrderCreate":
+        ids = [item.product_id for item in self.items]
+        if len(ids) != len(set(ids)):
+            raise ValueError("Each product may appear only once; raise its quantity instead")
+        return self
+
+
+class StatusUpdate(BaseModel):
+    status: OrderStatus
+
+
+class OrderItem(BaseModel):
+    product_id: int
+    product_name: str
+    unit_price: Decimal
+    quantity: int
+    line_total: Decimal
+
+
+class Order(BaseModel):
+    id: int
+    user_id: int
+    status: OrderStatus
+    total: Decimal
+    created_at: datetime
+    items: list[OrderItem]

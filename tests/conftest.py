@@ -1,16 +1,27 @@
 import pytest
+from argon2 import PasswordHasher
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app import models  # noqa: F401  (registers the tables on Base)
+from app import models, security  # noqa: F401  (models registers the tables on Base)
 from app.create_admin import create_or_promote_admin
 from app.database import Base, get_db
 from app.main import app
 
 ADMIN_EMAIL = "admin@example.com"
 ADMIN_PASSWORD = "correct horse battery"
+
+
+@pytest.fixture(autouse=True)
+def fast_password_hashing(monkeypatch):
+    # Argon2 is slow ON PURPOSE, which makes a test suite that registers many
+    # users crawl. In tests only, use the cheapest settings. The real settings
+    # in app/security.py are untouched, and hashes still verify normally.
+    monkeypatch.setattr(
+        security, "_hasher", PasswordHasher(time_cost=1, memory_cost=8, parallelism=1)
+    )
 
 
 @pytest.fixture
@@ -49,6 +60,40 @@ def login(client: TestClient, email: str, password: str) -> str:
     response = client.post("/auth/login", json={"email": email, "password": password})
     assert response.status_code == 200, response.text
     return response.json()["access_token"]
+
+
+def register_and_login(client: TestClient, email: str, password: str = "correct horse battery") -> dict:
+    """Create an account and return the headers that log requests in as it."""
+    response = client.post("/auth/register", json={"email": email, "password": password})
+    assert response.status_code == 201, response.text
+    return {"Authorization": f"Bearer {login(client, email, password)}"}
+
+
+@pytest.fixture
+def alice(plain_client) -> dict:
+    return register_and_login(plain_client, "alice@example.com")
+
+
+@pytest.fixture
+def bob(plain_client) -> dict:
+    return register_and_login(plain_client, "bob@example.com")
+
+
+@pytest.fixture
+def admin(admin_token) -> dict:
+    return {"Authorization": f"Bearer {admin_token}"}
+
+
+@pytest.fixture
+def shop(plain_client, admin) -> dict:
+    """A small shop: a notebook (19.99, 10 in stock) and a pen (1.50, 100)."""
+    notebook = plain_client.post(
+        "/products", json={"name": "Notebook", "price": "19.99", "stock": 10}, headers=admin
+    ).json()
+    pen = plain_client.post(
+        "/products", json={"name": "Pen", "price": "1.50", "stock": 100}, headers=admin
+    ).json()
+    return {"notebook": notebook["id"], "pen": pen["id"]}
 
 
 @pytest.fixture

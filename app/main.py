@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.database import init_db
-from app.routers import auth, products
+from app.routers import auth, orders, products
 
 
 @asynccontextmanager
@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 # registered on it.
 app = FastAPI(
     title="Orders API",
-    version="0.3.0",
+    version="0.4.0",
     description="A small ordering API: accounts, products, orders and payments.",
     lifespan=lifespan,
 )
@@ -27,6 +27,7 @@ app = FastAPI(
 # Attach the route groups to the application.
 app.include_router(auth.router)
 app.include_router(products.router)
+app.include_router(orders.router)
 
 
 # "@app.get('/')" is a decorator. It tells FastAPI: when a client sends a GET

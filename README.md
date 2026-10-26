@@ -49,6 +49,12 @@ logins reset on every restart.
 | POST   | `/products`      | admin   | Create a product (validated) |
 | GET    | `/products`      | none    | List products with paging    |
 | GET    | `/products/{id}` | none    | Get one product              |
+| POST   | `/orders`        | token   | Create an order              |
+| GET    | `/orders`        | token   | List my orders               |
+| GET    | `/orders/{id}`   | token   | Get one order (owner/admin)  |
+| POST   | `/orders/{id}/cancel` | token | Cancel my pending order    |
+| GET    | `/admin/orders`  | admin   | List all orders, filter by status |
+| PATCH  | `/orders/{id}/status` | admin | Change an order's status   |
 
 ## Lessons
 
@@ -56,3 +62,4 @@ logins reset on every restart.
 2. [Products and validation](docs/lesson-02-products-and-validation.md)
 3. [A real database](docs/lesson-03-real-database.md)
 4. [Accounts, password hashing and login](docs/lesson-04-accounts-and-login.md)
+5. [Orders](docs/lesson-05-orders.md)

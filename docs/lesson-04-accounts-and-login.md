@@ -192,8 +192,8 @@ promotes them and never touches their password.
 .venv\Scripts\python.exe -m pytest -q
 ```
 
-You should see `50 passed`. They take about 15 seconds because Argon2 is slow
-by design, and every registration and login hashes a password.
+You should see all tests pass. (In lesson 4 the suite had 50 tests. It took
+about 15 seconds because Argon2 is slow by design. Lesson 5 makes it faster.)
 
 ## What we skipped on purpose (real systems need these)
 

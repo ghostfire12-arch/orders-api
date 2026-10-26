@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import BigInteger, DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import BigInteger, DateTime, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -21,6 +21,47 @@ class UserRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+
+class OrderRow(Base):
+    """One row in the "orders" table: who ordered, the status, the total."""
+
+    __tablename__ = "orders"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # A foreign key points at a row in another table. It makes the database
+    # refuse an order that belongs to a user who does not exist.
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    total_cents: Mapped[int] = mapped_column(BigInteger)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    # One order has many items. lazy="selectin" loads the items together with
+    # the order, so showing 20 orders does not run 20 extra queries.
+    items: Mapped[list["OrderItemRow"]] = relationship(
+        back_populates="order",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="OrderItemRow.id",
+    )
+
+
+class OrderItemRow(Base):
+    """One line of an order: a product, a quantity, and the price paid."""
+
+    __tablename__ = "order_items"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), index=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    # Snapshots: we copy the name and price at the moment of purchase. If the
+    # shop changes the price tomorrow, yesterday's order must not change.
+    product_name: Mapped[str] = mapped_column(String(100))
+    unit_price_cents: Mapped[int] = mapped_column(BigInteger)
+    quantity: Mapped[int]
+
+    order: Mapped["OrderRow"] = relationship(back_populates="items")
 
 
 class ProductRow(Base):

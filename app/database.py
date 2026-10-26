@@ -1,7 +1,9 @@
 import os
+import sqlite3
 from collections.abc import Iterator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 # Where the database lives. A SQLite URL like "sqlite:///./orders.db" means
@@ -19,6 +21,16 @@ engine = create_engine(DATABASE_URL, connect_args=_connect_args)
 # A session is one conversation with the database: read some rows, change
 # some, then commit (save) or roll back (undo). SessionLocal creates them.
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+
+
+@event.listens_for(Engine, "connect")
+def _enforce_foreign_keys_in_sqlite(dbapi_connection, _connection_record) -> None:
+    # SQLite ignores foreign keys unless you switch the rule on for every
+    # connection. Other databases enforce them by default.
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 class Base(DeclarativeBase):
