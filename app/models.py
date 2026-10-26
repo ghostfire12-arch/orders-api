@@ -1,7 +1,26 @@
-from sqlalchemy import BigInteger, String
+from datetime import datetime, timezone
+
+from sqlalchemy import BigInteger, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
+
+
+class UserRow(Base):
+    """One row in the "users" table."""
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # unique=True makes the database itself refuse a second account with the
+    # same email, even if two requests arrive at the same moment.
+    email: Mapped[str] = mapped_column(String(254), unique=True, index=True)
+    # We store the hash, never the password.
+    password_hash: Mapped[str] = mapped_column(String(255))
+    is_admin: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
 
 
 class ProductRow(Base):

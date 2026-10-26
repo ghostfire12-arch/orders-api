@@ -1,3 +1,12 @@
+import pytest
+
+
+@pytest.fixture
+def client(admin_client):
+    # Creating products needs an admin, so these tests use a logged-in admin.
+    return admin_client
+
+
 def make_product(client, **overrides):
     payload = {"name": "Notebook", "description": "A5, 120 pages", "price": "19.99", "stock": 10}
     payload.update(overrides)

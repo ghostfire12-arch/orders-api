@@ -9,7 +9,8 @@ from app.repository import ProductRepository, from_cents, to_cents
 from app.schemas import ProductCreate
 
 
-def test_money_is_stored_as_whole_cents(client, session_factory):
+def test_money_is_stored_as_whole_cents(admin_client, session_factory):
+    client = admin_client
     client.post("/products", json={"name": "Notebook", "price": "19.99"})
 
     with session_factory() as db:

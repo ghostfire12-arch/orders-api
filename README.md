@@ -26,17 +26,33 @@ Data is stored in a SQLite file, `orders.db`, created on first start (it is
 git-ignored). Set the `DATABASE_URL` environment variable to use another
 database.
 
+## Configuration
+
+Settings come from environment variables (see `.env.example`). Set
+`SECRET_KEY` to a long random value; without it a random key is used and
+logins reset on every restart.
+
+## First admin
+
+```
+.venv\Scripts\python.exe -m app.create_admin
+```
+
 ## Endpoints
 
-| Method | Path             | Description                  |
-| ------ | ---------------- | ---------------------------- |
-| GET    | `/health`        | Service health check         |
-| POST   | `/products`      | Create a product (validated) |
-| GET    | `/products`      | List products with paging    |
-| GET    | `/products/{id}` | Get one product              |
+| Method | Path             | Auth    | Description                  |
+| ------ | ---------------- | ------- | ---------------------------- |
+| GET    | `/health`        | none    | Service health check         |
+| POST   | `/auth/register` | none    | Create an account            |
+| POST   | `/auth/login`    | none    | Get an access token          |
+| GET    | `/users/me`      | token   | The logged-in user           |
+| POST   | `/products`      | admin   | Create a product (validated) |
+| GET    | `/products`      | none    | List products with paging    |
+| GET    | `/products/{id}` | none    | Get one product              |
 
 ## Lessons
 
 1. [A first API that runs](docs/lesson-01-hello-api.md)
 2. [Products and validation](docs/lesson-02-products-and-validation.md)
 3. [A real database](docs/lesson-03-real-database.md)
+4. [Accounts, password hashing and login](docs/lesson-04-accounts-and-login.md)

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.deps import require_admin
 from app.repository import ProductRepository
 from app.schemas import Product, ProductCreate
 
@@ -23,7 +24,14 @@ def get_repository(db: Annotated[Session, Depends(get_db)]) -> ProductRepository
 Repo = Annotated[ProductRepository, Depends(get_repository)]
 
 
-@router.post("", response_model=Product, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=Product,
+    status_code=status.HTTP_201_CREATED,
+    # Only admins may create products. The dependency runs first: no token
+    # gives 401, a non-admin token gives 403, and this function never starts.
+    dependencies=[Depends(require_admin)],
+)
 def create_product(payload: ProductCreate, repo: Repo) -> Product:
     # "payload: ProductCreate" is validated before this function runs.
     # 201 means "created", the correct code for a new resource.

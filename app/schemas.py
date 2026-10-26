@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ProductCreate(BaseModel):
@@ -26,3 +26,54 @@ class Product(ProductCreate):
     """What the API sends back: everything in ProductCreate, plus an id."""
 
     id: int
+
+
+# A simple email shape check: something@something.something, no spaces.
+# It rejects obvious mistakes. The only real proof an email works is sending a
+# message to it, which a later step could add.
+EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+
+
+class UserCreate(BaseModel):
+    """What a person sends to register."""
+
+    # Trim spaces and turn the email to lowercase, so "Ada@x.com " and
+    # "ada@x.com" are the same account.
+    email: str = Field(max_length=254, pattern=EMAIL_PATTERN)
+    # Minimum length stops weak passwords. The maximum stops someone sending a
+    # gigantic "password" to make the server waste time hashing it.
+    password: str = Field(min_length=8, max_length=128)
+
+    # mode="before" runs this cleanup BEFORE the length and pattern rules.
+    # The default ("after") would check the raw text first, and reject an
+    # email that only has stray spaces around it.
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        return value.strip().lower() if isinstance(value, str) else value
+
+
+class LoginRequest(BaseModel):
+    email: str = Field(max_length=254)
+    password: str = Field(max_length=128)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        return value.strip().lower() if isinstance(value, str) else value
+
+
+class UserPublic(BaseModel):
+    """What the API may show about a user. Notice: no password, no hash."""
+
+    # Lets us build this model straight from a database row.
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: str
+    is_admin: bool
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

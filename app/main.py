@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.database import init_db
-from app.routers import products
+from app.routers import auth, products
 
 
 @asynccontextmanager
@@ -19,12 +19,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 # registered on it.
 app = FastAPI(
     title="Orders API",
-    version="0.2.0",
+    version="0.3.0",
     description="A small ordering API: accounts, products, orders and payments.",
     lifespan=lifespan,
 )
 
-# Attach the products routes to the application.
+# Attach the route groups to the application.
+app.include_router(auth.router)
 app.include_router(products.router)
 
 
