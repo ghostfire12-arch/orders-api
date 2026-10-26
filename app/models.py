@@ -64,6 +64,33 @@ class OrderItemRow(Base):
     order: Mapped["OrderRow"] = relationship(back_populates="items")
 
 
+class PaymentRow(Base):
+    """One attempt to pay for an order.
+
+    An order can have several payment rows (a customer may abandon one
+    checkout and start another). Only a confirmed one moves the order to paid.
+    """
+
+    __tablename__ = "payments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), index=True)
+    # The unique code that links OUR record to the provider's. When the
+    # provider tells us "reference X was paid", this is how we find the row.
+    reference: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(20))
+    # What we asked the customer to pay. We compare the provider's report to
+    # these values, we do not just believe it.
+    amount_cents: Mapped[int] = mapped_column(BigInteger)
+    currency: Mapped[str] = mapped_column(String(3))
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    authorization_url: Mapped[str] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class ProductRow(Base):
     """One row in the "products" table.
 

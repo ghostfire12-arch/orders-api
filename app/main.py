@@ -1,16 +1,26 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.database import init_db
-from app.routers import auth, orders, products
+from app.payment_providers import get_payment_provider
+from app.routers import auth, orders, payments, products
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Runs once when the server starts: make sure the tables exist.
     init_db()
+    # Build the payment provider NOW. If it is misconfigured (for example
+    # Paystack chosen but no key set) the server refuses to start, instead of
+    # failing in front of the first customer.
+    provider = get_payment_provider()
+    if provider.name == "fake":
+        logger.warning("Using the FAKE payment provider. No real money moves.")
     yield
     # Anything after "yield" would run when the server shuts down.
 
@@ -19,7 +29,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 # registered on it.
 app = FastAPI(
     title="Orders API",
-    version="0.4.0",
+    version="0.5.0",
     description="A small ordering API: accounts, products, orders and payments.",
     lifespan=lifespan,
 )
@@ -28,6 +38,7 @@ app = FastAPI(
 app.include_router(auth.router)
 app.include_router(products.router)
 app.include_router(orders.router)
+app.include_router(payments.router)
 
 
 # "@app.get('/')" is a decorator. It tells FastAPI: when a client sends a GET

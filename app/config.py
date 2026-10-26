@@ -20,3 +20,19 @@ JWT_ALGORITHM = "HS256"
 
 # Short-lived tokens limit the damage if one is stolen.
 ACCESS_TOKEN_MINUTES = int(os.getenv("ACCESS_TOKEN_MINUTES", "30"))
+
+# --- Payments ---------------------------------------------------------------
+# "fake" is for development and demos: nothing is charged. "paystack" talks to
+# the real Paystack API and needs PAYSTACK_SECRET_KEY.
+PAYMENT_PROVIDER = os.getenv("PAYMENT_PROVIDER", "fake").lower()
+
+# Your Paystack secret key (starts with sk_test_ or sk_live_). It lets whoever
+# holds it charge and refund your customers: never put it in code or git.
+# It also signs Paystack's webhooks, so we use it to check them.
+PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+
+# Signs webhooks for the FAKE provider only. Random if you do not set it.
+PAYMENT_WEBHOOK_SECRET = os.getenv("PAYMENT_WEBHOOK_SECRET")
+
+# Amounts are stored in the smallest unit (kobo for NGN), same as Paystack.
+CURRENCY = os.getenv("CURRENCY", "NGN").upper()

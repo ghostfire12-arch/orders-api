@@ -32,6 +32,11 @@ Settings come from environment variables (see `.env.example`). Set
 `SECRET_KEY` to a long random value; without it a random key is used and
 logins reset on every restart.
 
+Payments use a fake provider by default (nothing is charged). To use
+Paystack, set `PAYMENT_PROVIDER=paystack` and `PAYSTACK_SECRET_KEY` in your
+environment. The Paystack integration is tested against a mock of their API,
+not yet against the live service. See lesson 6.
+
 ## First admin
 
 ```
@@ -55,6 +60,9 @@ logins reset on every restart.
 | POST   | `/orders/{id}/cancel` | token | Cancel my pending order    |
 | GET    | `/admin/orders`  | admin   | List all orders, filter by status |
 | PATCH  | `/orders/{id}/status` | admin | Change an order's status   |
+| POST   | `/orders/{id}/pay` | token  | Start a payment for my pending order |
+| GET    | `/orders/{id}/payments` | token | List an order's payments (owner/admin) |
+| POST   | `/webhooks/payments` | signature | Payment provider notifications |
 
 ## Lessons
 
@@ -63,3 +71,4 @@ logins reset on every restart.
 3. [A real database](docs/lesson-03-real-database.md)
 4. [Accounts, password hashing and login](docs/lesson-04-accounts-and-login.md)
 5. [Orders](docs/lesson-05-orders.md)
+6. [Payments and webhooks](docs/lesson-06-payments.md)

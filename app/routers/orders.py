@@ -29,7 +29,7 @@ def _order_not_found() -> HTTPException:
     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
 
-def _load_visible_order(orders: OrderRepository, order_id: int, user: UserRow) -> OrderRow:
+def load_visible_order(orders: OrderRepository, order_id: int, user: UserRow) -> OrderRow:
     """Find an order, but only if this user is allowed to see it.
 
     Customers may see their own orders. Admins may see all of them. For
@@ -76,7 +76,7 @@ def list_my_orders(
 
 @router.get("/orders/{order_id}", response_model=Order)
 def get_order(order_id: int, user: CurrentUser, orders: OrderRepo) -> Order:
-    return to_order(_load_visible_order(orders, order_id, user))
+    return to_order(load_visible_order(orders, order_id, user))
 
 
 @router.post("/orders/{order_id}/cancel", response_model=Order)

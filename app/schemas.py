@@ -91,6 +91,34 @@ class OrderStatus(StrEnum):
     CANCELLED = "cancelled"
 
 
+class PaymentStatus(StrEnum):
+    PENDING = "pending"  # started, waiting for the provider to confirm
+    SUCCEEDED = "succeeded"  # confirmed by a verified webhook; order is paid
+    NEEDS_REVIEW = "needs_review"  # money arrived but something is wrong: a human must look
+
+
+class PaymentStart(BaseModel):
+    """What the customer needs to go and pay."""
+
+    reference: str
+    authorization_url: str
+    amount: Decimal
+    currency: str
+    status: PaymentStatus
+
+
+class Payment(BaseModel):
+    id: int
+    order_id: int
+    reference: str
+    provider: str
+    amount: Decimal
+    currency: str
+    status: PaymentStatus
+    created_at: datetime
+    paid_at: datetime | None
+
+
 class OrderItemCreate(BaseModel):
     """One line the customer wants. Note: there is no price field.
 

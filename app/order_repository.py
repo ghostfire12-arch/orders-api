@@ -134,7 +134,13 @@ class OrderRepository:
             query = query.where(OrderRow.status == status.value)
         return list(self.db.scalars(query))
 
-    def change_status(self, order: OrderRow, new_status: OrderStatus) -> OrderRow:
+    def change_status(self, order: OrderRow, new_status: OrderStatus, commit: bool = True) -> OrderRow:
+        """Move an order to a new status.
+
+        With commit=False the change is staged but not saved, so the caller can
+        save it together with other changes (for example, the payment record)
+        in one transaction.
+        """
         current = OrderStatus(order.status)
         if new_status not in ALLOWED_TRANSITIONS[current]:
             raise InvalidTransition(current.value, new_status.value)
@@ -158,9 +164,11 @@ class OrderRepository:
                         .where(ProductRow.id == item.product_id)
                         .values(stock=ProductRow.stock + item.quantity)
                     )
-            self.db.commit()
+            if commit:
+                self.db.commit()
         except Exception:
             self.db.rollback()
             raise
-        self.db.refresh(order)
+        if commit:
+            self.db.refresh(order)
         return order

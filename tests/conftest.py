@@ -9,6 +9,7 @@ from app import models, security  # noqa: F401  (models registers the tables on 
 from app.create_admin import create_or_promote_admin
 from app.database import Base, get_db
 from app.main import app
+from app.payment_providers import FakeProvider, get_payment_provider
 
 ADMIN_EMAIL = "admin@example.com"
 ADMIN_PASSWORD = "correct horse battery"
@@ -39,8 +40,18 @@ def session_factory():
     engine.dispose()
 
 
+WEBHOOK_SECRET = "test-webhook-secret-for-the-fake-provider"
+
+
 @pytest.fixture
-def plain_client(session_factory) -> TestClient:
+def payment_provider() -> FakeProvider:
+    # A fake payment company whose signing secret the tests know, so a test
+    # can play the part of the provider and send correctly signed webhooks.
+    return FakeProvider(WEBHOOK_SECRET)
+
+
+@pytest.fixture
+def plain_client(session_factory, payment_provider) -> TestClient:
     """A client that is not logged in."""
 
     def override_get_db():
@@ -52,6 +63,7 @@ def plain_client(session_factory) -> TestClient:
 
     # Tell FastAPI: wherever a route asks for get_db, use the test database.
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_payment_provider] = lambda: payment_provider
     yield TestClient(app)
     app.dependency_overrides.clear()
 
