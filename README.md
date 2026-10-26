@@ -20,6 +20,12 @@ Open http://127.0.0.1:8000/docs for the interactive documentation.
 .venv\Scripts\python.exe -m pytest -q
 ```
 
+## Database
+
+Data is stored in a SQLite file, `orders.db`, created on first start (it is
+git-ignored). Set the `DATABASE_URL` environment variable to use another
+database.
+
 ## Endpoints
 
 | Method | Path             | Description                  |
@@ -33,3 +39,4 @@ Open http://127.0.0.1:8000/docs for the interactive documentation.
 
 1. [A first API that runs](docs/lesson-01-hello-api.md)
 2. [Products and validation](docs/lesson-02-products-and-validation.md)
+3. [A real database](docs/lesson-03-real-database.md)
