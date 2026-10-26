@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from app.routers import products
+
 # The FastAPI object is the whole application. Every route we add later is
 # registered on it.
 app = FastAPI(
@@ -7,6 +9,9 @@ app = FastAPI(
     version="0.1.0",
     description="A small ordering API: accounts, products, orders and payments.",
 )
+
+# Attach the products routes to the application.
+app.include_router(products.router)
 
 
 # "@app.get('/')" is a decorator. It tells FastAPI: when a browser or client

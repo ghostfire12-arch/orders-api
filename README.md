@@ -8,12 +8,28 @@ orders and payments. Built step by step, with a lesson for each step in
 
 ```
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
+.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements-dev.txt
 .venv\Scripts\python.exe -m uvicorn app.main:app --reload
 ```
 
 Open http://127.0.0.1:8000/docs for the interactive documentation.
 
+## Run the tests
+
+```
+.venv\Scripts\python.exe -m pytest -q
+```
+
+## Endpoints
+
+| Method | Path             | Description                  |
+| ------ | ---------------- | ---------------------------- |
+| GET    | `/health`        | Service health check         |
+| POST   | `/products`      | Create a product (validated) |
+| GET    | `/products`      | List products with paging    |
+| GET    | `/products/{id}` | Get one product              |
+
 ## Lessons
 
 1. [A first API that runs](docs/lesson-01-hello-api.md)
+2. [Products and validation](docs/lesson-02-products-and-validation.md)
