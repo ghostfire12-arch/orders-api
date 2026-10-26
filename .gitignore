@@ -1,0 +1,13 @@
+# Virtual environment: rebuilt from requirements.txt, never committed
+.venv/
+
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets and local data: never commit these
+.env
+.env.*
+*.db
+*.sqlite3
